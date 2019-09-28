@@ -54,7 +54,19 @@ is_ignores(G,[_|AS],X,Y):-
 
 %%% level 1 %%%
 
+% checks if Y is followed by all the members of the list
+follows_list(_,[],_).
+follows_list(G,[X|T],Y) :-
+    follows(G,X,Y),follows_list(G,T,Y).
+
 % popular(G, X)
+popular(G,X):-
+    is_popular(G,G,X).
+
+is_popular(G,[person(X,Y)|_],X) :-
+    follows_list(G,Y,X).
+is_popular(G,[_|T],X) :-
+    is_popular(G,T,X).
 
 % outcast(G, X)
 
