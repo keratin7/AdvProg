@@ -59,7 +59,6 @@ follows_list(_,[],_).
 follows_list(G,[X|T],Y) :-
     follows(G,X,Y),follows_list(G,T,Y).
 
-% popular(G, X)
 popular(G,X):-
     is_popular(G,G,X).
 
@@ -68,7 +67,17 @@ is_popular(G,[person(X,Y)|_],X) :-
 is_popular(G,[_|T],X) :-
     is_popular(G,T,X).
 
-% outcast(G, X)
+ignores_list(_,[],_).
+ignores_list(G,[X|T],Y) :-
+    ignores(G,X,Y),ignores_list(G,T,Y).
+
+outcast(G,X):-
+    is_outcast(G,G,X).
+
+is_outcast(G,[person(X,Y)|_],X) :-
+    ignores_list(G,Y,X).
+is_outcast(G,[_|T],X) :-
+    is_outcast(G,T,X).
 
 % friendly(G, X)
 
