@@ -26,4 +26,10 @@ test(follows2, [fail]) :-
 test(follows3, [set(X == [barry,clark,oliver])]) :-
     g1(G), follows(G, X, kara).
 
+test(follows4, [set(X == [kara])]) :-
+    g1(G), follows(G, X, barry).
+
+test(follows5, [set(X == [kara])]) :-
+    g1(G), follows(G, oliver, Y).
+
 :- end_tests(instahub).
