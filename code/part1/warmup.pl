@@ -2,10 +2,11 @@
 % Skeleton for warm-up part. Predicates to implement:
 
 add(X,z,X).
-add(X,s(Y),s(N)) :- add_(X,Y,N).
+add(X,s(Y),s(N)) :- 
+	add(X,Y,N).
 
 mult(X,s(Y),Z) :- 
-	add_(X,K,Z),
+	add(X,K,Z),
 	mult(X,Y,K).
 
 comp(X,X,eq).
