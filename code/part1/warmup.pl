@@ -10,11 +10,10 @@ mult(X,s(Y),Z) :-
 	mult(X,Y,K).
 
 comp(X,X,eq).
-comp(_,z,gt).
-comp(z,_,lt).
-comp(s(X),s(Y),Z) :-
-	X \= Y,
-	comp(X,Y,Z). 
+comp(X,s(X),lt).
+comp(s(X),X,gt).
+comp(s(X),Y,gt) :- comp(X,Y,gt).
+comp(X,s(Y),lt) :- comp(X,Y,lt).
 
 
 insert(N, leaf, node(N, leaf, leaf)).
