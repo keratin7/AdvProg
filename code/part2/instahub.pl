@@ -26,7 +26,7 @@ different(G,X,Y) :-
 % checks if X is not a member of list 
 not_membe(_,_,[]).
 not_membe(G,X, [Z|P]) :-
-	different1(G,X,Z) ,not_membe(G,X,P).
+	different(G,X,Z) ,not_membe(G,X,P).
 
 %% g1([person(kara, [barry, clark]),
 %%     person(bruce,[clark, oliver]),
