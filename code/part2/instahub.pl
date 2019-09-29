@@ -28,11 +28,11 @@ not_membe(_,_,[]).
 not_membe(G,X, [Z|P]) :-
 	different(G,X,Z) ,not_membe(G,X,P).
 
-%% g1([person(kara, [barry, clark]),
-%%     person(bruce,[clark, oliver]),
-%%     person(barry, [kara, oliver]),
-%%     person(clark, [oliver, kara]),
-%%     person(oliver, [kara])]).
+g1([person(kara, [barry, clark]),
+    person(bruce,[clark, oliver]),
+    person(barry, [kara, oliver]),
+    person(clark, [oliver, kara]),
+    person(oliver, [kara])]).
 
 %%% level 0 %%%
 
@@ -46,24 +46,29 @@ ignores(G,X,Y):-
 	is_ignores(G,G,X,Y).
 
 is_ignores(N,[person(X,F)|_],X,Y):-
-	follows(N,Y,X), not_membe(N,Y,F).
-is_ignores(G,[_|AS],X,Y):-
+	follows(N,Y,X), 
+	not_membe(N,Y,F).
+is_ignores(G,[_|AS],X,Y):-  %Shouldn't this be (G,AS,X,Y)?
 	is_ignores(G,AS,X,Y).
-
-
 
 %%% level 1 %%%
 
 % checks if Y is followed by all the members of the list
-follows_list(_,[],_).
-follows_list(G,[X|T],Y) :-
-    follows(G,X,Y),follows_list(G,T,Y).
+followed_list(_,[],_).
+followed_list(G,[X|T],Y) :-
+    follows(G,X,Y),followed_list(G,T,Y).
+
+% checks if Y follows all members of the list
+follow_list(_,_,[]).
+follow_list(G,Y,[H|T]):-
+	follows(G,Y,H),
+	follow_list(G,Y,T).
 
 popular(G,X):-
     is_popular(G,G,X).
 
 is_popular(G,[person(X,Y)|_],X) :-
-    follows_list(G,Y,X).
+    followed_list(G,Y,X).  %change variable names. X=Y
 is_popular(G,[_|T],X) :-
     is_popular(G,T,X).
 
@@ -79,7 +84,14 @@ is_outcast(G,[person(X,Y)|_],X) :-
 is_outcast(G,[_|T],X) :-
     is_outcast(G,T,X).
 
-% friendly(G, X)
+friendly(G, X) :- 
+	is_friendly(G, G, X).
+
+is_friendly(G, [person(P,L)|_], X) :-
+	membe(X,L),
+	follows(G,X,P).
+is_friendly(G, [_|T], X) :-
+	is_friendly(G, T, X).
 
 % hostile(G, X)
 
