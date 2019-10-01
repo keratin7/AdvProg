@@ -72,43 +72,22 @@ is_popular(G,[person(X,Y)|_],X) :-
 is_popular(G,[_|T],X) :-
     is_popular(G,T,X).
 
-ignores_list(_,[],_).
-ignores_list(G,[X|T],Y) :-
-    ignores(G,X,Y),ignores_list(G,T,Y).
+%% checks if Y is ignored by everyone in the list
+ignored_list(_,[],_).
+ignored_list(G,[X|T],Y) :-
+    ignores(G,X,Y),ignored_list(G,T,Y).
 
 outcast(G,X):-
     is_outcast(G,G,X).
 
 is_outcast(G,[person(X,Y)|_],X) :-
-    ignores_list(G,Y,X).
+    ignored_list(G,Y,X).
 is_outcast(G,[_|T],X) :-
     is_outcast(G,T,X).
 
 friendly(G, X) :- 
 	list_follow(G, G, X, FL),
 	follow_list(G, X, FL).
-	%% is_friendly(G, G, X).
-
- %Attempt nested recursion
-%% is_friendly(G, [person(P,L)|T], X) :-
-	
-
-%% found_one(G, [person(P,L)|T], X) :-
-
-
-%% check_rest(G, [], X) :-
-%% 	fail.
-%% check_rest(G, [person(P,L)|T],X) :-
-%% 	membe(X,L),
-%% 	follows(G,X,P),
-%% 	is_friendly(G,T,X).
-%% check_rest(G, [person(P,L)|T],X) :-
-%% 	not_membe(X,L),
-%% 	is_friendly(G,T,X).
-
-%% is_friendly(G, [_|T], X) :-
-	%% is_friendly(G, T, X).
-
 
 concat([], L, L).
 concat([H|L1],L2,[H|L3]) :-
@@ -124,8 +103,6 @@ list_follow(G,[person(P,L)|T], Per, [P|FL]) :-
 list_follow(G,[person(_,L)|T], Per, FL) :-
 	not_membe(G,Per,L),
 	list_follow(G,T,Per,FL).
-
-
 
 % hostile(G, X)
 
