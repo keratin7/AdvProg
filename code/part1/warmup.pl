@@ -5,9 +5,8 @@ add(X,z,X).
 add(X,s(Y),s(N)) :- 
 	add(X,Y,N).
 
-mult(X,s(Y),Z) :- 
-	add(X,K,Z),
-	mult(X,Y,K).
+mult(z,_,z).
+mult(s(Y),X,N) :- add(K,X,N), mult(Y,X,K).
 
 comp(X,X,eq).
 comp(X,s(X),lt).
