@@ -28,11 +28,7 @@ not_membe(_,_,[]).
 not_membe(G,X, [Z|P]) :-
 	different(G,X,Z) ,not_membe(G,X,P).
 
-g1([person(kara, [barry, clark]),
-    person(bruce,[clark, oliver]),
-    person(barry, [kara, oliver]),
-    person(clark, [oliver, kara]),
-    person(oliver, [kara])]).
+
 
 %%% level 0 %%%
 
@@ -48,7 +44,7 @@ ignores(G,X,Y):-
 is_ignores(N,[person(X,F)|_],X,Y):-
 	follows(N,Y,X), 
 	not_membe(N,Y,F).
-is_ignores(G,[_|AS],X,Y):-  %Shouldn't this be (G,AS,X,Y)?
+is_ignores(G,[_|AS],X,Y):-  %Shouldnt this be (G,AS,X,Y)?
 	is_ignores(G,AS,X,Y).
 
 %%% level 1 %%%
@@ -77,6 +73,11 @@ ignored_list(_,[],_).
 ignored_list(G,[X|T],Y) :-
     ignores(G,X,Y),ignored_list(G,T,Y).
 
+%% checks if Y ignores everyone in the list
+ignores_list(_,[],_).
+ignores_list(G,[X|T],Y) :-
+    ignores(G,Y,X),ignores_list(G,T,Y).
+
 outcast(G,X):-
     is_outcast(G,G,X).
 
@@ -104,7 +105,9 @@ list_follow(G,[person(_,L)|T], Per, FL) :-
 	not_membe(G,Per,L),
 	list_follow(G,T,Per,FL).
 
-% hostile(G, X)
+hostile(G, X) :-
+    list_follow(G, G, X, FL),
+    ignores_list(G, FL, X).
 
 %%% level 2 %%%
 
