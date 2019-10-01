@@ -30,6 +30,24 @@ test(follows4, [set(X == [kara])]) :-
     g1(G), follows(G, X, barry).
 
 test(follows5, [set(X == [kara])]) :-
-    g1(G), follows(G, oliver, Y).
+    g1(G), follows(G, oliver, X).
+
+test(friendly1, [set(X == [kara, barry])]) :-
+    friendly([person(kara,[barry]),person(barry,[kara])], X).
+
+test(friendly2, [nondet]) :-
+    friendly([person(kara,[]),person(barry,[])], kara).
+
+test(friendly3, [set(X == [kara, oliver])]) :-
+    friendly([person(kara,[barry]),person(barry,[]),person(oliver,[])], X).
+
+test(friendly3, [set(X == [barry, bruce])]) :-
+    g1(G), friendly(G, X).
+
+test(hostile1, [set(X == [kara, barry, oliver])]) :-
+    hostile([person(kara,[barry]),person(barry,[]),person(oliver,[])], X).
+
+test(hostile2, [set(X == [bruce, oliver])]) :-
+    g1(G), hostile(G, X).
 
 :- end_tests(instahub).
