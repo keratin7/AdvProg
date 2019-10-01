@@ -85,13 +85,47 @@ is_outcast(G,[_|T],X) :-
     is_outcast(G,T,X).
 
 friendly(G, X) :- 
-	is_friendly(G, G, X).
+	list_follow(G, G, X, FL),
+	follow_list(G, X, FL).
+	%% is_friendly(G, G, X).
 
-is_friendly(G, [person(P,L)|_], X) :-
-	membe(X,L),
-	follows(G,X,P).
-is_friendly(G, [_|T], X) :-
-	is_friendly(G, T, X).
+ %Attempt nested recursion
+%% is_friendly(G, [person(P,L)|T], X) :-
+	
+
+%% found_one(G, [person(P,L)|T], X) :-
+
+
+%% check_rest(G, [], X) :-
+%% 	fail.
+%% check_rest(G, [person(P,L)|T],X) :-
+%% 	membe(X,L),
+%% 	follows(G,X,P),
+%% 	is_friendly(G,T,X).
+%% check_rest(G, [person(P,L)|T],X) :-
+%% 	not_membe(X,L),
+%% 	is_friendly(G,T,X).
+
+%% is_friendly(G, [_|T], X) :-
+	%% is_friendly(G, T, X).
+
+
+concat([], L, L).
+concat([H|L1],L2,[H|L3]) :-
+	concat(L1,L2,L3).
+
+appen([], X, X).
+appen([X|L],X,[X|L]).
+
+list_follow(_,[],_,[]). 
+list_follow(G,[person(P,L)|T], Per, [P|FL]) :-
+	membe(Per,L),
+	list_follow(G,T,Per,FL).
+list_follow(G,[person(_,L)|T], Per, FL) :-
+	not_membe(G,Per,L),
+	list_follow(G,T,Per,FL).
+
+
 
 % hostile(G, X)
 
