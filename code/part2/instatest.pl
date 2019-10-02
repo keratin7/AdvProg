@@ -178,5 +178,61 @@ test(hostile8, [nondet]) :-
 
 test(hostile9, [set(X == [kia, mia])]) :-
     g4(G), hostile(G, X).
+    
+/**
 
+test(aware1, [nondet]) :-
+    g1(G), aware(G,kara, oliver).
+
+test(aware2, [set(X == [kara, barry, clark, oliver])]) :-
+    g1(G), aware(G,bruce, X).
+
+test(aware3, [fail]) :-
+    g1(G), aware(G,kara, bruce).
+
+test(aware4, [nondet]) :-
+    g3(G), aware(G,kem, olin).
+
+test(aware5, [set(X == [ben, ken, olin, clint, brad])]) :-
+    g3(G), aware(G,jenna, X).
+
+test(aware6, [fail]) :-
+    g3(G), aware(G,ana, _).
+
+test(aware7, [fail]) :-
+    g4(G), aware(G,kia, _).
+
+
+test(ignorant1, [nondet]) :-
+    g1(G), ignorant(G,kara, bruce).
+
+test(ignorant2, [set(X == [bruce])]) :-
+    g1(G), ignorant(G,barry, X).
+
+test(ignorant3, [fail]) :-
+    g1(G), ignorant(G, bruce, kara).
+
+test(ignorant4, [nondet]) :-
+    g3(G), ignorant(G,kem, jenna).
+
+test(ignorant5, [set(X == [carol, ana])]) :-
+    g3(G), ignorant(G,jenna, X).
+
+test(ignorant6, [nondet]) :-
+    g3(G), ignorant(G,ana, carol).
+
+test(ignorant7, [nondet]) :-
+    g4(G), ignorant(G,kia, mia).
+
+test(same_world1, [set(X == [[p(kara,supergirl),
+                             p(bruce,batman), 
+                             p(barry,flash), 
+                             p(clark,superman), 
+                             p(oliver,green_arrow)]])]) :-
+    g1(G), g2(H), same_world(G,H,X).
+
+test(same_world2, [fail]) :-
+    g1(G), g3(H), same_world(G,H,_).
+
+**/
 :- end_tests(instahub).
