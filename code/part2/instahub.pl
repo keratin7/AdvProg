@@ -1,11 +1,6 @@
 %% % AP2019 Assignment 3
 % Skeleton for main part. Predicates to implement:
 
-g1([person(kara, [barry, clark]),
-    person(bruce,[clark, oliver]),
-    person(barry, [kara, oliver]),
-    person(clark, [oliver, kara]),
-    person(oliver, [kara])]).
 
 % removes X from list and return Rest
 is_selec(X, [Head|Tail], Rest) :-
@@ -121,7 +116,7 @@ is_aware(G,H,Y,_):-
 	follows(G,H,Y).
 is_aware(G,[H|_],Y,_) :-
 	follows(G,H,Y).
-is_aware(G, [H|_], Y, Visited) :-
+is_aware(_, [H|_], _, Visited) :-
 	membe(H,Visited),
 	false.
 is_aware(G,[_|T],Y,Visited):-
