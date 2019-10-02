@@ -15,6 +15,18 @@ g2([person(batman, [green_arrow, superman]),
     person(flash, [green_arrow, supergirl]),
     person(superman, [green_arrow, supergirl])]).
 
+g3([person(ken, [ben, olin]),
+    person(ben,[ken]),
+    person(olin, [ken, ben, brad, clint]),
+    person(clint, [brad]),
+    person(brad, [olin]),
+    person(jenna, [brad, clint]),
+    person(carol, []),
+    person(ana, [])]).
+
+g4([person(kia, []),
+    person(mia,[])]).
+
 :- begin_tests(instahub).
 
 test(follows1, [nondet]) :-
@@ -32,22 +44,139 @@ test(follows4, [set(X == [kara])]) :-
 test(follows5, [set(X == [kara])]) :-
     g1(G), follows(G, oliver, X).
 
-test(friendly1, [set(X == [kara, barry])]) :-
-    friendly([person(kara,[barry]),person(barry,[kara])], X).
+test(follows6, [fail]) :-
+    g3(G), follows(G, carol, _).
 
-test(friendly2, [nondet]) :-
-    friendly([person(kara,[]),person(barry,[])], kara).
+test(follows7, [set(X == [brad, clint])]) :-
+    g3(G), follows(G, jenna, X).
 
-test(friendly3, [set(X == [kara, oliver])]) :-
-    friendly([person(kara,[barry]),person(barry,[]),person(oliver,[])], X).
+test(follows8, [fail]) :-
+    g4(G), follows(G, kia, _).
 
-test(friendly3, [set(X == [barry, bruce])]) :-
+
+test(ignores1, [fail]) :-
+    g1(G), ignores(G, bruce, oliver).
+
+test(ignores2, [nondet]) :-
+    g1(G), ignores(G, clark, bruce).
+
+test(ignores3, [set(X == [bruce, barry, clark])]) :-
+    g1(G), ignores(G, oliver, X).
+
+test(ignores4, [fail]) :-
+    g3(G), ignores(G, jenna, _).
+
+test(ignores5, [set(X == [clint, brad])]) :-
+    g3(G), ignores(G, X, jenna).
+
+test(ignores6, [fail]) :-
+    g3(G), ignores(G, _,carol).
+
+test(ignores7, [nondet]) :-
+    g3(G), ignores(G, ben, olin).
+
+test(ignores8, [fail]) :-
+    g4(G), ignores(G, mia, _).
+
+
+
+test(popular1, [set(X == [kara])]) :-
+    g1(G), popular(G, X).
+
+test(popular2, [nondet]) :-
+    g1(G), popular(G, kara).
+
+test(popular3, [fail]) :-
+    g1(G), popular(G, barry).
+
+test(popular4, [set(X == [ken, ben, brad, carol, ana])]) :-
+    g3(G), popular(G, X).
+
+test(popular5, [nondet]) :-
+    g3(G), popular(G, brad).
+
+test(popular6, [fail]) :-
+    g3(G), popular(G, clint).
+
+test(popular7, [set(X == [kia, mia])]) :-
+    g4(G), popular(G, X).
+
+
+test(outcast1, [set(X == [bruce, oliver])]) :-
+    g1(G), outcast(G, X).
+
+test(outcast2, [nondet]) :-
+    g1(G), outcast(G, bruce).
+
+test(outcast3, [fail]) :-
+    g1(G), outcast(G, kara).
+
+test(outcast4, [set(X == [clint, jenna, carol, ana])]) :-
+    g3(G), outcast(G, X).
+
+test(outcast5, [nondet]) :-
+    g3(G), outcast(G, carol).
+
+test(outcast6, [fail]) :-
+    g3(G), outcast(G, ben).
+
+test(outcast7, [set(X == [kia, mia])]) :-
+    g4(G), outcast(G, X).
+
+
+test(friendly1, [set(X == [barry, bruce])]) :-
     g1(G), friendly(G, X).
 
-test(hostile1, [set(X == [kara, barry, oliver])]) :-
-    hostile([person(kara,[barry]),person(barry,[]),person(oliver,[])], X).
+test(friendly2, [nondet]) :-
+    g1(G), friendly(G, barry).
 
-test(hostile2, [set(X == [bruce, oliver])]) :-
+test(friendly3, [fail]) :-
+    g1(G), friendly(G, kara).
+
+test(friendly4, [set(X == [olin, ken, jenna, carol, ana])]) :-
+    g3(G), friendly(G, X).
+
+test(friendly5, [nondet]) :-
+    g3(G), friendly(G, jenna).
+
+test(friendly6, [fail]) :-
+    g3(G), friendly(G, ben).
+
+test(friendly7, [nondet]) :-
+    g4(G), friendly(G, kia).
+
+test(friendly8, [nondet]) :-
+    g4(G), friendly(G, mia).
+
+test(friendly9, [set(X == [kia, mia])]) :-
+    g4(G), friendly(G, X).
+
+
+test(hostile1, [set(X == [oliver, bruce])]) :-
     g1(G), hostile(G, X).
+
+test(hostile2, [nondet]) :-
+    g1(G), hostile(G, bruce).
+
+test(hostile3, [fail]) :-
+    g1(G), hostile(G, kara).
+
+test(hostile4, [set(X == [clint, jenna, carol, ana])]) :-
+    g3(G), hostile(G, X).
+
+test(hostile5, [nondet]) :-
+    g3(G), hostile(G, jenna).
+
+test(hostile6, [fail]) :-
+    g3(G), hostile(G, ben).
+
+test(hostile7, [nondet]) :-
+    g4(G), hostile(G, kia).
+
+test(hostile8, [nondet]) :-
+    g4(G), hostile(G, mia).
+
+test(hostile9, [set(X == [kia, mia])]) :-
+    g4(G), hostile(G, X).
 
 :- end_tests(instahub).
