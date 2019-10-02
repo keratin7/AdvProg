@@ -1,6 +1,12 @@
 %% % AP2019 Assignment 3
 % Skeleton for main part. Predicates to implement:
 
+g1([person(kara, [barry, clark]),
+    person(bruce,[clark, oliver]),
+    person(barry, [kara, oliver]),
+    person(clark, [oliver, kara]),
+    person(oliver, [kara])]).
+
 % removes X from list and return Rest
 is_selec(X, [Head|Tail], Rest) :-
   is_select3(Tail, Head, X, Rest).
@@ -29,7 +35,6 @@ not_membe(G,X, [Z|P]) :-
 	different(G,X,Z) ,not_membe(G,X,P).
 
 
-
 %%% level 0 %%%
 
 follows([person(X,D)|_],X,Y):-
@@ -39,13 +44,13 @@ follows([_|AS],X,Y):-
     
 % ignores(G, X, Y)
 ignores(G,X,Y):-
-	is_ignores(G,G,X,Y).
+	does_ignore(G,G,X,Y).
 
-is_ignores(N,[person(X,F)|_],X,Y):-
+does_ignore(N,[person(X,F)|_],X,Y):-
 	follows(N,Y,X), 
 	not_membe(N,Y,F).
-is_ignores(G,[_|AS],X,Y):-  %Shouldnt this be (G,AS,X,Y)?
-	is_ignores(G,AS,X,Y).
+does_ignore(G,[_|AS],X,Y):- 
+	does_ignore(G,AS,X,Y).
 
 %%% level 1 %%%
 
@@ -90,13 +95,6 @@ friendly(G, X) :-
 	list_follow(G, G, X, FL),
 	follow_list(G, X, FL).
 
-concat([], L, L).
-concat([H|L1],L2,[H|L3]) :-
-	concat(L1,L2,L3).
-
-appen([], X, X).
-appen([X|L],X,[X|L]).
-
 list_follow(_,[],_,[]). 
 list_follow(G,[person(P,L)|T], Per, [P|FL]) :-
 	membe(Per,L),
@@ -111,9 +109,33 @@ hostile(G, X) :-
 
 %%% level 2 %%%
 
-% aware(G, X, Y)
+not_follows(G,[person(X,F)|_],X,Y):-
+    not_membe(G,Y,F).
+not_follows(G,[_|G1],X,Y):-
+    not_follows(G,G1,X,Y).
 
-% ignorant(G, X, Y)
+aware(G,X,Y) :- 
+	is_aware(G, [X], Y, []).
+
+is_aware(G,H,Y,_):-
+	follows(G,H,Y).
+is_aware(G,[H|_],Y,_) :-
+	follows(G,H,Y).
+is_aware(G, [H|_], Y, Visited) :-
+	membe(H,Visited),
+	false.
+is_aware(G,[_|T],Y,Visited):-
+	is_aware(G,T,Y,Visited).
+is_aware(G, [H|_],Y,Visited):-
+	follows(G,H,Z),
+	is_aware(G,Z,Y,[H|Visited]).
+
+ignorant(G, X, Y):-
+	is_ignorant(G,X,Y).
+
+is_ignorant(G,X,Y):-
+	is_aware(G,X,Z),
+	not_membe(G,Y,Z).
 
 %%% level 3 %%%
 
