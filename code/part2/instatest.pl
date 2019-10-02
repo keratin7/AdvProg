@@ -151,6 +151,9 @@ test(friendly8, [nondet]) :-
 test(friendly9, [set(X == [kia, mia])]) :-
     g4(G), friendly(G, X).
 
+test(friendly10, [nondet]) :-
+    friendly([], _).
+
 
 test(hostile1, [set(X == [oliver, bruce])]) :-
     g1(G), hostile(G, X).
@@ -178,7 +181,10 @@ test(hostile8, [nondet]) :-
 
 test(hostile9, [set(X == [kia, mia])]) :-
     g4(G), hostile(G, X).
-    
+
+test(hostile10, [nondet]) :-
+    hostile([], _).
+
 /**
 
 test(aware1, [nondet]) :-
