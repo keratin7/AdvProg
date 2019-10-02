@@ -185,8 +185,6 @@ test(hostile9, [set(X == [kia, mia])]) :-
 test(hostile10, [nondet]) :-
     hostile([], _).
 
-/**
-
 test(aware1, [nondet]) :-
     g1(G), aware(G,kara, oliver).
 
@@ -197,7 +195,7 @@ test(aware3, [fail]) :-
     g1(G), aware(G,kara, bruce).
 
 test(aware4, [nondet]) :-
-    g3(G), aware(G,kem, olin).
+    g3(G), aware(G,ken, olin).
 
 test(aware5, [set(X == [ben, ken, olin, clint, brad])]) :-
     g3(G), aware(G,jenna, X).
@@ -219,7 +217,7 @@ test(ignorant3, [fail]) :-
     g1(G), ignorant(G, bruce, kara).
 
 test(ignorant4, [nondet]) :-
-    g3(G), ignorant(G,kem, jenna).
+    g3(G), ignorant(G,ken, jenna).
 
 test(ignorant5, [set(X == [carol, ana])]) :-
     g3(G), ignorant(G,jenna, X).
@@ -229,7 +227,7 @@ test(ignorant6, [nondet]) :-
 
 test(ignorant7, [nondet]) :-
     g4(G), ignorant(G,kia, mia).
-
+/**
 test(same_world1, [set(X == [[p(kara,supergirl),
                              p(bruce,batman), 
                              p(barry,flash), 

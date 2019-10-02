@@ -119,10 +119,10 @@ aware(G,X,Y) :-
 	is_aware(G, [X], Y, []).
 
 
-is_aware(G, [H|_], Y, Visited) :-
+is_aware(_, [H|_], _, Visited) :-
 	membe(H,Visited),
 	false.
-is_aware(G,H,Y,Visited) :-
+is_aware(_,H,_,Visited) :-
 	membe(H,Visited),
 	false.
 is_aware(G,H,Y,_):-
