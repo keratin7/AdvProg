@@ -134,7 +134,7 @@ ignorant(G, X, Y):-
 	is_ignorant(G,X,Y).
 
 is_ignorant(G,X,Y):-
-	is_aware(G,X,Z),
+	aware(G,X,Z),
 	not_membe(G,Y,Z).
 
 %%% level 3 %%%
