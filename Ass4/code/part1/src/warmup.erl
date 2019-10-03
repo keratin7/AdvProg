@@ -1,10 +1,12 @@
 -module(warmup).
--export([]).
+-export([move/2,insert/3,lookup/2]).
 
 % direction is one of the atoms north, south, east or west
 
 move(north, {X, Y}) -> {X, Y+1};
-move(west,  {X, Y}) -> {X-1, Y}.
+move(west,  {X, Y}) -> {X-1, Y};
+move(south, {X, Y}) -> {X, Y-1};
+move(east,  {X, Y}) -> {X+1, Y}.
 % complete the definition
 
 
@@ -19,13 +21,22 @@ move(west,  {X, Y}) -> {X-1, Y}.
 % insert inserts a key and a value into a binary search tree. If the
 % key is already there the value is updated.
 
-insert(Key, Value, Tree) -> undefined.
+insert(Key, Value, leaf) -> {node, Key, Value, leaf, leaf};
+insert(Key, Value, {node, K, _, Left, Right}) -> 
+	if Key =:= K -> {node, K, Value, Left, Right};
+	   Key < K -> insert(Key, Value, Left);
+	   Key > K -> insert(Key, Value, Right)
+	end.
 % complete the definition.
 
 
 % lookup find the value associated to a key in a binary search
 % tree. Returns {ok, Value} if the key is in the tree; or none if the
 % key is not in the tree.
-
-lookup(Key, Tree) -> undefined.
+lookup(_, leaf) -> none;
+lookup(Key, {node, K, V, Left, Right}) -> 
+	if Key =:= K -> {ok, V};
+	   Key < K -> lookup(Key, Left);
+	   Key > K -> lookup(Key, Right)
+	end.
 % complete the definition.
