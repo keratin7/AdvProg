@@ -7,7 +7,6 @@ move(north, {X, Y}) -> {X, Y+1};
 move(west,  {X, Y}) -> {X-1, Y};
 move(south, {X, Y}) -> {X, Y-1};
 move(east,  {X, Y}) -> {X+1, Y}.
-% complete the definition
 
 
 % A binary search tree is either
@@ -22,12 +21,11 @@ move(east,  {X, Y}) -> {X+1, Y}.
 % key is already there the value is updated.
 
 insert(Key, Value, leaf) -> {node, Key, Value, leaf, leaf};
-insert(Key, Value, {node, K, _, Left, Right}) -> 
+insert(Key, Value, {node, K, V, Left, Right}) -> 
 	if Key =:= K -> {node, K, Value, Left, Right};
-	   Key < K -> insert(Key, Value, Left);
-	   Key > K -> insert(Key, Value, Right)
+	   Key < K -> {node, K, V, insert(Key, Value, Left), Right};
+	   Key > K -> {node, K, V, Left, insert(Key, Value, Right)}
 	end.
-% complete the definition.
 
 
 % lookup find the value associated to a key in a binary search
@@ -39,4 +37,3 @@ lookup(Key, {node, K, V, Left, Right}) ->
 	   Key < K -> lookup(Key, Left);
 	   Key > K -> lookup(Key, Right)
 	end.
-% complete the definition.
