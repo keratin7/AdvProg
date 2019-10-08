@@ -8,13 +8,13 @@ greeter({_Path, [{"name", Name} | _ ]}, Server) ->
 
 server() ->
     {ok, F} = flamingo:start("The Flamingo Server"),
-    flamingo:new_route(F, ["/hello"], fun greeter/2, none),
+    flamingo:new_route(F, ["/hello"], fun greeter/2),
     F.
 
-try_it(Server) ->
+try_it(Flamingo) ->
     Me = self(),
     Ref = make_ref(),
-    flamingo:request(Server, {"/hello", [{"name", "Student"}]},
+    flamingo:request(Flamingo, {"/hello", [{"name", "Student"}]},
                      Me, Ref),
     receive
         {Ref, Reply} -> Reply
