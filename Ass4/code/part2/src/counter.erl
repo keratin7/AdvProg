@@ -2,18 +2,18 @@
 -export([server/0]).
 
 inc({_Path, [{"x", N} | _ ]}, Server) ->
-	Server ! {self(), in, N},
+	Server ! {self(), in, list_to_integer(N)},
 	receive
 		{C} -> C
 	end,
-	{200, "text/plain", C}.
+	{200, "text/plain", integer_to_list(C)}.
 
 dec({_Path, [{"x", N} | _ ]}, Server) ->
-	Server ! {self(), de, N},
+	Server ! {self(), de, list_to_integer(N)},
 	receive
 		{C} -> C
 	end,
-	{200, "text/plain", C}.
+	{200, "text/plain", integer_to_list(C)}.
 
 server() ->
 	Count_id = counter_server(),
