@@ -25,12 +25,12 @@ greetings_test_() ->
      fun () ->
              F = greetings:server(),
              Ref = make_ref(),
-             flamingo:request(F, {"/xyz", [{"name", "Ken"}]},
+             flamingo:request(F, {"/hello", [{"name", "Ken"}]},
                               self(), Ref),
-             % Expected = "Greetings Ken\nYou have reached The Flamingo Server",
+             Expected = "Greetings Ken\nYou have reached The Flamingo Server",
              receive
                  X ->
-                     ?assertMatch({Ref, {404, _, _}}, X)
+                     ?assertMatch({Ref, {200, _, _}}, X)
              end
 
      end}.

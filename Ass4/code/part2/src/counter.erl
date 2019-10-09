@@ -1,31 +1,34 @@
 -module(counter).
 -export([server/0]).
 
-inc({_Path, [{K, N} | _ ]}, Server) ->
-	IntN = list_to_integer(N),
-	NN = if 	% Check if key is "x" or value is negative
-		K =/= "x" -> 1;
-		IntN<0 -> 1;
-		K =:= "x" -> IntN
-	end,
-	Server ! {self(), in, NN},
+inc({_Path, Li}, Server) ->
+	Val = checkli(Li),
+	Server ! {self(), in, Val},
 	receive
 		{C} -> C
 	end,
 	{200, "text/plain", integer_to_list(C)}.
 
-dec({_Path, [{K, N} | _ ]}, Server) ->
-	IntN = list_to_integer(N),
-	NN = if 	% Check if key is "x" or value is negative
-		K =/= "x" -> 1;
-		IntN<0 -> 1;
-		K =:= "x" -> IntN
-	end,
-	Server ! {self(), de, NN},	%Message to spawned counter server
+dec({_Path, Li}, Server) ->
+	Val = checkli(Li),
+	Server ! {self(), de, Val},	%Message to spawned counter server
 	receive
 		{C} -> C
 	end,
 	{200, "text/plain", integer_to_list(C)}.
+
+% Checks what value should be passed to the counter
+checkli(Li) ->
+	case Li of
+		[] -> 1;
+		[{"x",V}|_] ->
+			IntV = list_to_integer(V),
+			if
+				IntV >= 0 -> IntV;
+				true -> 1
+			end;
+		[_|T] -> checkli(T)
+	end.  
 
 server() ->
 	Count_id = counter_server(),
