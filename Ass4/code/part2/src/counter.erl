@@ -1,15 +1,27 @@
 -module(counter).
 -export([server/0]).
 
-inc({_Path, [{"x", N} | _ ]}, Server) ->
-	Server ! {self(), in, list_to_integer(N)},
+inc({_Path, [{K, N} | _ ]}, Server) ->
+	IntN = list_to_integer(N),
+	NN = if 	% Check if key is "x" or value is negative
+		K =/= "x" -> 1;
+		IntN<0 -> 1;
+		K =:= "x" -> IntN
+	end,
+	Server ! {self(), in, NN},
 	receive
 		{C} -> C
 	end,
 	{200, "text/plain", integer_to_list(C)}.
 
-dec({_Path, [{"x", N} | _ ]}, Server) ->
-	Server ! {self(), de, list_to_integer(N)},
+dec({_Path, [{K, N} | _ ]}, Server) ->
+	IntN = list_to_integer(N),
+	NN = if 	% Check if key is "x" or value is negative
+		K =/= "x" -> 1;
+		IntN<0 -> 1;
+		K =:= "x" -> IntN
+	end,
+	Server ! {self(), de, NN},	%Message to spawned counter server
 	receive
 		{C} -> C
 	end,
