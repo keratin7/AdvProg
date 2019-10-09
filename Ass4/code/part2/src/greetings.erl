@@ -1,5 +1,5 @@
 -module(greetings).
--export([server/0, try_it/1]).
+-export([server/0, try_it/1).
 
 greeter({_Path, [{"name", Name} | _ ]}, Server) ->
     {200, "text/plain",
