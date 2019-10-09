@@ -27,10 +27,115 @@ greetings_test_() ->
              Ref = make_ref(),
              flamingo:request(F, {"/hello", [{"name", "Ken"}]},
                               self(), Ref),
-             Expected = "Greetings Ken\nYou have reached The Flamingo Server",
              receive
                  X ->
                      ?assertMatch({Ref, {200, _, _}}, X)
+             end
+
+     end}.
+
+hello_test_() ->
+    {"hello_test_1_",
+     fun () ->
+             F = hello:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/hello",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "Hello my dear friend"}}, X)
+             end
+
+     end}.
+
+goodbye_test_() ->
+    {"goodbye test in hello server ",
+     fun () ->
+             F = hello:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/goodbye",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "Sad to see you go already."}}, X)
+             end
+
+     end}.
+
+invalid_path_test_() ->
+    {"requesting invalid path in hello server ",
+     fun () ->
+             F = hello:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/gd",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {404, _, _}}, X)
+             end
+
+     end}.
+
+moo_test_() ->
+    {"moo test  ",
+     fun () ->
+             F = mood:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/moo",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "That's funny"}}, X)
+             end
+             
+
+     end}.
+
+happy_mood_test_() ->
+    {"happy mood test  ",
+     fun () ->
+             F = mood:server(),
+             Ref = make_ref(),
+             
+             flamingo:request(F, {"/moo",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "That's funny"}}, X)
+             end,
+             flamingo:request(F, {"/mood",[]},
+                              self(), Ref),
+             receive
+                 Y ->
+                     ?assertMatch({Ref, {200, "text/plain", "Happy!"}}, Y)
+             end
+             
+     end}.
+
+sad_mood_test_() ->
+    {"sad mood test  ",
+     fun () ->
+             F = mood:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/mood",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "Sad"}}, X)
+             end
+
+     end}.
+
+inc_counter_test_() ->
+    {"inc counter test  ",
+     fun () ->
+             F = counter:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/inc_with",[{"x","2"}]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "2"}}, X)
              end
 
      end}.
