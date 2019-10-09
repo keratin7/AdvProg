@@ -44,7 +44,16 @@ loop({String, Routes}) ->
 	end.
 
 handle_req(String, Routes, Path, ArgList) ->
-	Fan = maps:get(Path, Routes),
-	Fan({Path, ArgList}, String).
+	try
+		Fan = maps:get(Path, Routes),
+		try
+			Fan({Path, ArgList}, String)
+		catch
+			Exception:Reason -> {500, "text/plain", "Action failed. "}
+		end
+	catch
+		Eception:Rason -> {404, "text/plain", "No matching route."}
+	end.
 
+	
 

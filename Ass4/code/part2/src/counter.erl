@@ -22,7 +22,12 @@ checkli(Li) ->
 	case Li of
 		[] -> 1;
 		[{"x",V}|_] ->
-			IntV = list_to_integer(V),
+			IntV = 
+			try
+				list_to_integer(V)
+			catch
+				Exception:Reason -> 1
+			end,
 			if
 				IntV >= 0 -> IntV;
 				true -> 1
@@ -38,8 +43,12 @@ server() ->
 	F.
 
 counter_server() ->
-	C_id = spawn(fun() -> loop(0) end),
-	C_id.
+	try
+		C_id = spawn(fun() -> loop(0) end),
+		C_id
+	catch
+		Exception:Reason -> {500, "text/plain", "Couldn't start server"}
+	end.
 
 loop(Count) ->
 	receive
