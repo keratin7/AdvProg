@@ -2,11 +2,14 @@
 
 -export([start/1, new_route/3, request/4, drop_route/2]).
 
-start(Global) -> 
-	A = spawn(fun() -> loop({Global, maps:new()}) end),
-	{ok, A}.
-	% Implement error case {error reason}
-
+start(Global) ->
+	% Checks if new server is spawned.
+	try
+		A = spawn(fun() -> loop({Global, maps:new()}) end),
+		{ok, A}
+	catch
+		_Exception:_Reason -> "Couldn't spawn new server"
+	end.
 
 request(Flamingo, Request, From, Ref) ->
 	Flamingo ! {Request, From, Ref}.
@@ -23,36 +26,32 @@ drop_route(_Flamingo, _Id) ->
     % {String, map()}
 loop({String, Routes}) ->
 	receive
-		{{Path, ArgList}, F, Ref} ->
+		{{Path, ArgList}, F, Ref} ->	% request()
 			Res = handle_req(String, Routes, Path, ArgList),
 			F ! {Ref, Res},
 			loop({String, Routes});
 
-		{From, Li, Act} ->
-			NewLi = [ {X,Act} || X <- Li ],
+		{From, Li, Act} ->	% new_route()
+			NewLi = [ {X,Act} || X <- Li ], % Create list of {Prefix,Action} tuples
 			TempMap = maps:from_list(NewLi),
-			NewMap = maps:merge(Routes, TempMap),
+			NewMap = maps:merge(Routes, TempMap), % Any old prefixes are replaced
 		 	From ! {ok, NewMap},
-		 	loop({String, NewMap});
-
-		{From, Msg} ->
-			From ! {cool, Msg},
-			loop({String, Routes});
-
+		 	loop({String, NewMap});	% Update state
+		 	
 		stop ->
 			true
 	end.
 
 handle_req(String, Routes, Path, ArgList) ->
 	try
-		Fan = maps:get(Path, Routes),
+		Fan = maps:get(Path, Routes),	% Get action
 		try
-			Fan({Path, ArgList}, String)
+			Fan({Path, ArgList}, String)	% Execute action
 		catch
-			Exception:Reason -> {500, "text/plain", "Action failed. "}
+			_Exception:_Reason -> {500, "text/plain", "Action failed. "}
 		end
 	catch
-		Eception:Rason -> {404, "text/plain", "No matching route."}
+		_E:_R -> {404, "text/plain", "No matching route."}
 	end.
 
 	

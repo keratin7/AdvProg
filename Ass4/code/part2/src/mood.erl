@@ -28,7 +28,6 @@ moo_ser() ->
 loop(State) ->
 	receive
 		{_F,X} ->
-			% F ! State, 
 			loop(X);
 		{F} ->
 			F ! State,

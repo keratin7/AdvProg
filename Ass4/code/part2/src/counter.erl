@@ -26,7 +26,7 @@ checkli(Li) ->
 			try
 				list_to_integer(V)
 			catch
-				Exception:Reason -> 1
+				_Exception:_Reason -> 1
 			end,
 			if
 				IntV >= 0 -> IntV;
@@ -47,7 +47,7 @@ counter_server() ->
 		C_id = spawn(fun() -> loop(0) end),
 		C_id
 	catch
-		Exception:Reason -> {500, "text/plain", "Couldn't start server"}
+		_E:_R -> "Couldn't start Counter server"
 	end.
 
 loop(Count) ->
