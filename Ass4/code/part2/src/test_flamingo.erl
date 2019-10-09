@@ -108,6 +108,12 @@ happy_mood_test_() ->
              receive
                  Y ->
                      ?assertMatch({Ref, {200, "text/plain", "Happy!"}}, Y)
+             end,
+             flamingo:request(F, {"/mood",[]},
+                              self(), Ref),
+             receive
+                 Z ->
+                     ?assertMatch({Ref, {200, "text/plain", "Happy!"}}, Z)
              end
              
      end}.
@@ -126,8 +132,81 @@ sad_mood_test_() ->
 
      end}.
 
-inc_counter_test_() ->
-    {"inc counter test  ",
+mood_with_mooda_path_test_() ->
+    {"mood test with mooda path  ",
+     fun () ->
+             F = mood:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/mooda",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "Sad"}}, X)
+             end
+             
+
+     end}.
+
+
+
+inc_counter_without_x_in_arguments_test_() ->
+    {"inc counter test without x in arguments  ",
+     fun () ->
+             F = counter:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/inc_with",[{"y","2"}]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "1"}}, X)
+             end
+
+     end}.
+
+inc_counter_when_value_of_x_is_negative_integer_test_() ->
+    {"inc counter test when value of x is negative  ",
+     fun () ->
+             F = counter:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/inc_with",[{"x","-2"}]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "1"}}, X)
+             end
+
+     end}.
+
+inc_counter_without_arguments_test_() ->
+    {"inc counter test without arguments  ",
+     fun () ->
+             F = counter:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/inc_with",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "1"}}, X)
+             end
+
+     end}.
+
+inc_counter_with_invalid_argument_test_() ->
+    {"inc counter test  with invalid abc argument",
+     fun () ->
+             F = counter:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/inc_with",[{"abc"}]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "1"}}, X)
+             end
+
+     end}.
+
+dec_counter_test_() ->
+    {"dec counter test  ",
      fun () ->
              F = counter:server(),
              Ref = make_ref(),
@@ -136,6 +215,42 @@ inc_counter_test_() ->
              receive
                  X ->
                      ?assertMatch({Ref, {200, "text/plain", "2"}}, X)
+             end,
+             flamingo:request(F, {"/dec_with",[{"x","2"}]},
+                              self(), Ref),
+             receive
+                 Y ->
+                     ?assertMatch({Ref, {200, "text/plain", "0"}}, Y)
              end
 
      end}.
+
+dec_counter_1_test_() ->
+    {"dec counter 1 test  ",
+     fun () ->
+             F = counter:server(),
+             Ref = make_ref(),
+             flamingo:request(F, {"/inc_with",[]},
+                              self(), Ref),
+             receive
+                 X ->
+                     ?assertMatch({Ref, {200, "text/plain", "1"}}, X)
+             end,
+             flamingo:request(F, {"/inc_with",[]},
+                              self(), Ref),
+             receive
+                 Y ->
+                     ?assertMatch({Ref, {200, "text/plain", "2"}}, Y)
+             end,
+             flamingo:request(F, {"/dec_with",[{"x","2"}]},
+                              self(), Ref),
+             receive
+                 Z ->
+                     ?assertMatch({Ref, {200, "text/plain", "0"}}, Z)
+             end
+
+     end}.
+
+
+
+
