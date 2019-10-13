@@ -95,7 +95,6 @@ friendly(G, X) :-
 	list_follow(G, G, X, FL),
 	follow_list(G, X, FL).
 
-%% List of people who follow X
 list_follow(_,[],_,[]). 
 list_follow(G,[person(P,L)|T], Per, [P|FL]) :-
 	membe(Per,L),
@@ -116,20 +115,18 @@ not_follows(G,[_|G1],X,Y):-
     not_follows(G,G1,X,Y).
 
 aware(G,X,Y) :- 
-	is_aware(G, X, Y, []).
+	is_aware(G, [X], Y, []).
 
-
-is_aware(_, H, _, Visited) :-
-	membe(H,Visited),
-	false.
-%% is_aware(_,H,_,Visited) :-
-%% 	membe(H,Visited),
-%% 	false.
 is_aware(G,H,Y,_):-
 	follows(G,H,Y).
-%% is_aware(G,[H|T],Y,Visited):-
-%% 	is_aware(G,T,Y,[H|Visited]).
-is_aware(G,H,Y,Visited):-
+is_aware(G,[H|_],Y,_) :-
+	follows(G,H,Y).
+is_aware(G, [H|_], Y, Visited) :-
+	membe(H,Visited),
+	false.
+is_aware(G,[_|T],Y,Visited):-
+	is_aware(G,T,Y,Visited).
+is_aware(G, [H|_],Y,Visited):-
 	follows(G,H,Z),
 	is_aware(G,Z,Y,[H|Visited]).
 
