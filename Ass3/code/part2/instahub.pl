@@ -109,7 +109,6 @@ hostile(G, X) :-
 
 %%% level 2 %%%
 
-<<<<<<< HEAD
 aware(G, X, Y) :- 
 	is_aware(G, X, Y, []).
 
