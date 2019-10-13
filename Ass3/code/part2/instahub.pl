@@ -115,23 +115,18 @@ not_follows(G,[person(X,F)|_],X,Y):-
 not_follows(G,[_|G1],X,Y):-
     not_follows(G,G1,X,Y).
 
-aware(G,X,Y) :- 
+aware(G, X, Y) :- 
 	is_aware(G, X, Y, []).
 
-
-is_aware(_, H, _, Visited) :-
-	membe(H,Visited),
-	false.
-%% is_aware(_,H,_,Visited) :-
-%% 	membe(H,Visited),
-%% 	false.
-is_aware(G,H,Y,_):-
-	follows(G,H,Y).
-%% is_aware(G,[H|T],Y,Visited):-
-%% 	is_aware(G,T,Y,[H|Visited]).
-is_aware(G,H,Y,Visited):-
-	follows(G,H,Z),
-	is_aware(G,Z,Y,[H|Visited]).
+is_aware(G, H, Y, Visited):-
+	not_membe(G, H, Visited),
+	different(G, H, Y),
+	follows(G, H, Y).
+is_aware(G, H, Y, Visited):-
+	not_membe(G, H, Visited),
+	different(G, H, Y),
+	follows(G, H, Z),
+	is_aware(G, Z, Y, [H|Visited]).
 
 ignorant(G, X, Y):-
 	is_ignorant(G,X,Y).
