@@ -95,7 +95,6 @@ friendly(G, X) :-
 	list_follow(G, G, X, FL),
 	follow_list(G, X, FL).
 
-%% List of people who follow X
 list_follow(_,[],_,[]). 
 list_follow(G,[person(P,L)|T], Per, [P|FL]) :-
 	membe(Per,L),
@@ -110,11 +109,7 @@ hostile(G, X) :-
 
 %%% level 2 %%%
 
-not_follows(G,[person(X,F)|_],X,Y):-
-    not_membe(G,Y,F).
-not_follows(G,[_|G1],X,Y):-
-    not_follows(G,G1,X,Y).
-
+<<<<<<< HEAD
 aware(G, X, Y) :- 
 	is_aware(G, X, Y, []).
 
