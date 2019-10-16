@@ -1,11 +1,7 @@
 %% % AP2019 Assignment 3
 % Skeleton for main part. Predicates to implement:
 
-g1([person(kara, [barry, clark]),
-    person(bruce,[clark, oliver]),
-    person(barry, [kara, oliver]),
-    person(clark, [oliver, kara]),
-    person(oliver, [kara])]).
+g1([person(lex,[harley]),person(joker,[penguin,zoom]),person(penguin,[joker]),person(harley,[lex,penguin]),person(zoom,[lex,penguin,joker,harley]), person(aashish, [joker])]).
 
 % removes X from list and return Rest
 is_selec(X, [Head|Tail], Rest) :-
@@ -13,7 +9,6 @@ is_selec(X, [Head|Tail], Rest) :-
 is_select3(Tail, Head, Head, Tail).
 is_select3([Head2|Tail], Head, X, [Head|Rest]) :-
 is_select3(Tail, Head2, X, Rest).
-
 
 % checks if X is a member of a list
 membe(X, [X|_]).
@@ -34,6 +29,10 @@ not_membe(_,_,[]).
 not_membe(G,X, [Z|P]) :-
 	different(G,X,Z) ,not_membe(G,X,P).
 
+%% List of people who X follows.
+following([person(X,L)|_], X, L).
+following([_|T], X, L):-
+	following(T, X, L).
 
 %%% level 0 %%%
 
@@ -51,6 +50,26 @@ does_ignore(N,[person(X,F)|_],X,Y):-
 	not_membe(N,Y,F).
 does_ignore(G,[_|AS],X,Y):- 
 	does_ignore(G,AS,X,Y).
+
+list_people([], []).
+list_people([person(P,_)|T], [P|List]) :-
+	list_people(T, List).
+
+concat(L1, [], L1).
+concat(L1, [E|L2], [E|L3]) :-
+	concat(L1, L2, L3).
+
+%% List of people aware of H.
+l_aware(_, [], [], _).
+l_aware(G, [H|_], New_Aware_List, Visited):-
+	not_membe(G, H, Visited),
+	following(G, H, Rest),
+	concat(Aware_List1, Rest, New_Aware_List)
+	l_aware(G, Rest, Aware_List1, [H|Visited]),
+	%% is_selec(H, Aware_List1, Aware_List2),
+l_aware(G, [H|T], New_Aware_List, Visited):-
+	membe(H, Visited),
+	l_aware(G, T, New_Aware_List, Visited).
 
 %%% level 1 %%%
 
@@ -95,6 +114,7 @@ friendly(G, X) :-
 	list_follow(G, G, X, FL),
 	follow_list(G, X, FL).
 
+%% List of people who follow X
 list_follow(_,[],_,[]). 
 list_follow(G,[person(P,L)|T], Per, [P|FL]) :-
 	membe(Per,L),
@@ -126,8 +146,9 @@ ignorant(G, X, Y):-
 	is_ignorant(G,X,Y).
 
 is_ignorant(G,X,Y):-
-	aware(G,X,Z),
-	not_membe(G,Y,Z).
+	l_aware(G, [X], L, []),
+	different(G, X, Y),
+	not_membe(G,Y,L).
 
 %%% level 3 %%%
 
