@@ -1,7 +1,11 @@
 %% % AP2019 Assignment 3
 % Skeleton for main part. Predicates to implement:
 
-g1([person(lex,[harley]),person(joker,[penguin,zoom]),person(penguin,[joker]),person(harley,[lex,penguin]),person(zoom,[lex,penguin,joker,harley]), person(aashish, [joker])]).
+g1([person(kara, [barry, clark]),
+ person(bruce, [clark, oliver]),
+ person(barry, [kara, oliver]),
+ person(clark, [oliver, kara]),
+ person(oliver, [kara])]).
 
 % removes X from list and return Rest
 is_selec(X, [Head|Tail], Rest) :-
@@ -61,12 +65,13 @@ concat(L1, [E|L2], [E|L3]) :-
 
 %% List of people aware of H.
 l_aware(_, [], [], _).
-l_aware(G, [H|_], New_Aware_List, Visited):-
+l_aware(G, [H|T], New_Aware_List, Visited):-
 	not_membe(G, H, Visited),
 	following(G, H, Rest),
-	concat(Aware_List1, Rest, New_Aware_List)
 	l_aware(G, Rest, Aware_List1, [H|Visited]),
-	%% is_selec(H, Aware_List1, Aware_List2),
+	l_aware(G, T, Aware_List2, [H|Visited]),
+	concat(Aware_List1, Rest, ALR),
+	concat(ALR, Aware_List2, New_Aware_List).
 l_aware(G, [H|T], New_Aware_List, Visited):-
 	membe(H, Visited),
 	l_aware(G, T, New_Aware_List, Visited).
@@ -143,9 +148,6 @@ is_aware(G, H, Y, Visited):-
 	is_aware(G, Z, Y, [H|Visited]).
 
 ignorant(G, X, Y):-
-	is_ignorant(G,X,Y).
-
-is_ignorant(G,X,Y):-
 	l_aware(G, [X], L, []),
 	different(G, X, Y),
 	not_membe(G,Y,L).
