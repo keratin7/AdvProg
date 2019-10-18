@@ -24,13 +24,13 @@ handle_call({Name, Rounds}, P_id, State) ->		% queue_up
 		 Found == true ->	%If other player is found
 			{Nm, P1_id} = maps:get(Rounds, Que),	%Get player name, id
 			Que_rm = maps:remove(Rounds, Que),	% Remove player from Que
-			Cord = coordinator:start([P1_id,P_id,Rounds,self()]),	% Start coordinator with player_ids
+			{ok, Cord} = coordinator:start([P1_id,P_id,Rounds,self()]),	% Start coordinator with player_ids
 			gen_server:reply(P1_id, {ok, Name, Cord}),
 			Ong = maps:get(on, State),
 			NOng = lists:append(Ong, [Cord]),
 			Changes = #{on=>NOng, q=>Que_rm},
 			Upd_state = maps:merge(State, Changes),
-			{reply, {ok, Nm, Cord}, Upd_state}; % {reply, Reply, NewState}
+			{reply, {ok, Nm, Cord}, Upd_state, infinity}; % {reply, Reply, NewState}
 		true ->
 			Que_wp = maps:put(Rounds, {Name, P_id}, Que),
 			{noreply, maps:put(q, Que_wp, State), infinity}

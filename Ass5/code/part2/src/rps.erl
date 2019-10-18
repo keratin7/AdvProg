@@ -7,12 +7,13 @@ start() ->
 	Broker_pid.
 	
 queue_up(Broker_Ref, Name, Rounds) ->
-	gen_server:call(Broker_Ref, {Name, Rounds}).
+	gen_server:call(Broker_Ref, {Name, Rounds}, infinity).
 
 tell_state(Broker_Ref)->
 	gen_server:call(Broker_Ref, tell).
 
-move(_, _) -> nope.
+move(Coord, Choice) ->
+	gen_statem:call(Coord, {move, Choice}).
 
 statistics(Broker_Ref) ->
 	gen_server:call(Broker_Ref, stats).

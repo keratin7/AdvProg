@@ -8,7 +8,7 @@
 %% API.  This example uses a registered name name()
 %% and does not link to the caller.
 start(Game_Deatils) ->
-    gen_statem:start(?MODULE, Game_Deatils, []).
+    gen_statem:start_link(?MODULE, Game_Deatils, []).
 
 %% Mandatory callback functions
 terminate(_Reason, _State, _Data) ->
@@ -33,24 +33,34 @@ callback_mode() -> state_functions.
 
 %%% state callback(s)
 
-match({call,From}, {move, Choice}, #{player1 := Player1, player2 := Player2} = Data) ->
+match({call,{From,_R}}, {move, Choice}, #{player1 := Player1, player2 := Player2} = Data) ->
+    {P1_id,_Re} = Player1,
+    {P2_id,_Ref} = Player2,
     if
-        From =:= Player1 ->
+        From =:= P1_id ->
             {next_state, waiting_for_player2, Data#{last_move := Choice}};
-        From =:= Player2 ->
+        From =:= P2_id ->
             {next_state, waiting_for_player1, Data#{last_move := Choice}};
         true ->
+            io:write('Faack'),
             {keep_state,Data}
-    end.
+    end;
+match({call, From}, {tell_state}, Data) ->
+    {keep_state, Data,
+     [{reply,From,Data}]}.
     
-waiting_for_player2({call,From}, {move, Choice}, 
+waiting_for_player2( {call,{From, _Ref}}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
-     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
+     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}} = Data) ->
+    P2_id = element(1,Player2),
+    % {P2_id, _Ref} = Player2,
     if
-        From =:=  Player2 ->
+        From =:= P2_id ->
+            io:write('In loop'),
             NewGameLength = GameLength+1,
             NewRoundNo = RoundNo+1,
             MatchOutcome = match_result(LastMove, Choice),
+            io:write(MatchOutcome),
             if
                 MatchOutcome =:= won ->
                     if
@@ -60,7 +70,7 @@ waiting_for_player2({call,From}, {move, Choice},
                             [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}}
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, won}, {reply, Player2, lost}]}
                     end;
                 MatchOutcome =:= lost ->
                     if
@@ -69,18 +79,23 @@ waiting_for_player2({call,From}, {move, Choice},
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}}
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, lost}, {reply, Player2, won}]}
                     end;
                 MatchOutcome =:= tie ->
                     {next_state, match, Data#{last_move := none, game_length := NewGameLength}}
             end
-    end.
+    end;
+waiting_for_player2({call, From}, {tell_state}, Data) ->
+    {keep_state, Data,
+     [{reply,From,Data}]}.
 
-waiting_for_player1({call,From}, {move, Choice}, 
+waiting_for_player1({call,{From,_Ref}}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
      round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
+    {P1_id,_Re} = Player1,
+    % {P2_id,_Ref} = Player2,
     if
-        From =:=  Player1 ->
+        From =:=  P1_id ->
             NewGameLength = GameLength+1,
             NewRoundNo = RoundNo+1,
             MatchOutcome = match_result(LastMove, Choice),
@@ -92,7 +107,7 @@ waiting_for_player1({call,From}, {move, Choice},
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}}
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, won}, {reply, Player2, lost}]}
                     end;
                 MatchOutcome =:= won ->
                     if
@@ -101,7 +116,7 @@ waiting_for_player1({call,From}, {move, Choice},
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}}
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, lost}, {reply, Player2, won}]}
                     end;
                 MatchOutcome =:= tie ->
                     {next_state, match, Data#{last_move := none, game_length := NewGameLength}}
