@@ -6,9 +6,7 @@
          terminate/2, code_change/3]).
 
 start_link() ->
-    Return = gen_server:start_link(?MODULE, [], []),
-    io:format("start_link: ~p~n", [Return]),
-    Return.
+    gen_server:start_link(?MODULE, [], []).
 
 init([]) ->
     Queue = maps:new(), % #{ Rounds-> {Name, Pl_pid}}

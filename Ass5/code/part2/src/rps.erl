@@ -3,8 +3,7 @@
 -export([tell_state/1, start/0, queue_up/3, move/2, statistics/1, drain/3]).
 
 start() -> 
-	Broker_pid = broker:start_link(),
-	Broker_pid.
+	broker:start_link().
 	
 queue_up(Broker_Ref, Name, Rounds) ->
 	gen_server:call(Broker_Ref, {Name, Rounds}, infinity).
