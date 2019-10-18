@@ -26,11 +26,9 @@ start_supervisor(Fun, Arg) ->
 	process_flag(trap_exit, true),
 	Super_Pid = self(),
 	Action_Pid = spawn_link(fun() ->
-				timer:sleep(10000),
+				Result =
 				try 
 					Fun(Arg)
-				of
-					Result
 				catch
 					_Exception:Reason -> {exception, Reason}
 				end,
