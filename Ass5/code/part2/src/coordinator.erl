@@ -1,9 +1,9 @@
 -module(coordinator).
 -behaviour(gen_statem).
 
--export([start/1,move/1]).
+-export([start/1]).
 -export([terminate/3,code_change/4,init/1,callback_mode/0]).
--export([match/3, waiting_for_player1_turn/3, waiting_for_player2_turn/3 ]).
+-export([match/3, waiting_for_player1/3, waiting_for_player2/3, game_over/3 ]).
 
 %% API.  This example uses a registered name name()
 %% and does not link to the caller.
@@ -33,9 +33,7 @@ callback_mode() -> state_functions.
 
 %%% state callback(s)
 
-match({call,From}, {move, Choice}, Data) ->
-    Player1 = Data#{player1},
-    Player2 = Data#{player2},
+match({call,From}, {move, Choice}, #{player1 := Player1, player2 := Player2} = Data) ->
     if
         From =:= Player1 ->
             {next_state, waiting_for_player2, Data#{last_move := Choice}};
@@ -110,8 +108,8 @@ waiting_for_player1({call,From}, {move, Choice},
             end
     end.
 
-game_over(Event, _ , Data) ->
-    {keep_state_and_data}
+game_over(_, _ , Data) ->
+    {keep_state, Data}.
 
 
 match_result(FirstPChoice, SecondPChoice) ->
