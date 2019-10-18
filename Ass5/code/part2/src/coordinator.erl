@@ -50,7 +50,7 @@ match({call, From}, {tell_state}, Data) ->
     
 waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
-     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}} = Data) ->
+     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
     P2_id = element(1,Player2),
     if
         From =:= P2_id ->
@@ -63,22 +63,21 @@ waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice},
                 MatchOutcome == won ->
                     if
                         NewRoundNo == Rounds ->
+                            gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo},
                             [{reply, Player1, {game_over, Player1Score+1, Player2Score}}, {reply, F, {game_over, Player2Score, Player1Score+1}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, won}, {reply, F, lost}]}
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, round_won}, {reply, F, round_lost}]}
                     end;
                 MatchOutcome == lost ->
-                    % io:write(NewRoundNo),
                     if
                         NewRoundNo == Rounds ->
+                            gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score+1}}, {reply, F, {game_over, Player2Score+1, Player1Score}}]}; 
                         true ->
-                            nl,
-                            % io:write('true condition'),
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, round_lost}, {reply, F, round_won}]}
                     end;
@@ -104,6 +103,7 @@ waiting_for_player1({call,{From,_Ref}=F}, {move, Choice},
                 MatchOutcome == lost ->
                     if
                         NewRoundNo == Rounds ->
+                            gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score+1, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score+1}}]}; 
                         true ->
@@ -113,6 +113,7 @@ waiting_for_player1({call,{From,_Ref}=F}, {move, Choice},
                 MatchOutcome == won ->
                     if
                         NewRoundNo == Rounds ->
+                            gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score+1}}, {reply, Player2, {game_over, Player2Score+1, Player1Score}}]}; 
                         true ->

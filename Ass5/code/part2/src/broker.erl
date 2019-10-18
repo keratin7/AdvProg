@@ -47,9 +47,15 @@ handle_cast({Pid, Msg, drain}, State) ->	% Drain
 	UpdatedState = maps:put(df, true, State),
     Return = {noreply, UpdatedState},
     io:format("handle_cast: ~p~n", [Return]),
-    Return.
-handle_cast({game_over, GL}, State) ->
-	maps.put(lm, GL, State).
+    Return;
+handle_cast({C_id, game_over, GL}, State) ->
+	PrevBest = maps:get(lm, State),
+	L = maps:get(on, State),
+	if(GL > PrevBest) ->
+		{noreply, State#{lm := GL, on := lists:delete(C_id, L)}};
+	true ->
+		{noreply, State#{on := lists:delete(C_id, L)}}
+	end.
 
 handle_info(_Info, State) ->
     Return = {noreply, State},
