@@ -59,6 +59,10 @@ loop_supervisor(Action_Pid, Result_state, Sub_list) ->
 							loop_supervisor(Action_Pid, Result_state, Sub_list)
 
 						end;
+		{result, Action_Pid, {exception, Reason}} -> 
+						send_msg({exception, Reason}, Sub_list),
+						loop_supervisor(Action_Pid, {exception, Reason}, []);
+
 		{result, Action_Pid, Result} -> 
 						send_msg({ok, Result}, Sub_list),
 						loop_supervisor(Action_Pid, {ok, Result}, [])
