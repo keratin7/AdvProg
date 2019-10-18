@@ -5,8 +5,6 @@
 -export([terminate/3,code_change/4,init/1,callback_mode/0]).
 -export([match/3, waiting_for_player1/3, waiting_for_player2/3, game_over/3 ]).
 
-%% API.  This example uses a registered name name()
-%% and does not link to the caller.
 start(Game_Deatils) ->
     gen_statem:start(?MODULE, Game_Deatils, []).
 
