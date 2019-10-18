@@ -39,7 +39,7 @@ handle_call(stats, _From, State)->	% statistics
 	L = maps:get(lm, State),
 	O = maps:get(on, State),
 	Q = maps:get(q, State),
-	{reply, {ok, L, lists:flatlength(O), maps:size(Q)}, State}.
+	{reply, {ok, L, maps:size(Q), lists:flatlength(O)}, State}.
 
 handle_cast({Pid, Msg, drain}, State) ->	% Drain 
 	UpdatedState = maps:put(df, true, State),

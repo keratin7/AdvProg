@@ -60,7 +60,7 @@ waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice},
             if
                 MatchOutcome == won ->
                     if
-                        NewRoundNo == Rounds ->
+                        (Player1Score+1 > Rounds/2) or (NewRoundNo == Rounds)  ->
                             gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo},
@@ -71,7 +71,7 @@ waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice},
                     end;
                 MatchOutcome == lost ->
                     if
-                        NewRoundNo == Rounds ->
+                        (Player2Score+1 > Rounds/2) or (NewRoundNo == Rounds) ->
                             gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score+1}}, {reply, F, {game_over, Player2Score+1, Player1Score}}]}; 
@@ -100,7 +100,7 @@ waiting_for_player1({call,{From,_Ref}=F}, {move, Choice},
             if
                 MatchOutcome == lost ->
                     if
-                        NewRoundNo == Rounds ->
+                        (Player1Score+1 > Rounds/2) or (NewRoundNo == Rounds) ->
                             gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score+1, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score+1}}]}; 
@@ -110,7 +110,7 @@ waiting_for_player1({call,{From,_Ref}=F}, {move, Choice},
                     end;
                 MatchOutcome == won ->
                     if
-                        NewRoundNo == Rounds ->
+                        (Player2Score+1 > Rounds/2) or (NewRoundNo == Rounds) ->
                             gen_server:cast(Bro_ref, {self(), game_over, NewGameLength}),
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score+1}}, {reply, Player2, {game_over, Player2Score+1, Player1Score}}]}; 
