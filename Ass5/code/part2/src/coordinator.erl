@@ -33,63 +33,64 @@ callback_mode() -> state_functions.
 
 %%% state callback(s)
 
-match({call,{From,_R}}, {move, Choice}, #{player1 := Player1, player2 := Player2} = Data) ->
+match({call,{From,_R}=F}, {move, Choice}, #{player1 := Player1, player2 := Player2} = Data) ->
     {P1_id,_Re} = Player1,
     {P2_id,_Ref} = Player2,
     if
         From =:= P1_id ->
-            {next_state, waiting_for_player2, Data#{last_move := Choice}};
+            {next_state, waiting_for_player2, Data#{last_move := Choice, player1 := F}};
         From =:= P2_id ->
-            {next_state, waiting_for_player1, Data#{last_move := Choice}};
+            {next_state, waiting_for_player1, Data#{last_move := Choice, player2 := F}};
         true ->
-            io:write('Faack'),
             {keep_state,Data}
     end;
 match({call, From}, {tell_state}, Data) ->
     {keep_state, Data,
      [{reply,From,Data}]}.
     
-waiting_for_player2( {call,{From, _Ref}}, {move, Choice}, 
+waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
      round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}} = Data) ->
     P2_id = element(1,Player2),
-    % {P2_id, _Ref} = Player2,
     if
         From =:= P2_id ->
-            io:write('In loop'),
+            % io:write('In loop'),
             NewGameLength = GameLength+1,
             NewRoundNo = RoundNo+1,
             MatchOutcome = match_result(LastMove, Choice),
-            io:write(MatchOutcome),
+            % io:write(MatchOutcome),
             if
-                MatchOutcome =:= won ->
+                MatchOutcome == won ->
                     if
-                        NewRoundNo >= Rounds ->
+                        NewRoundNo == Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo},
-                            [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
+                            [{reply, Player1, {game_over, Player1Score+1, Player2Score}}, {reply, F, {game_over, Player2Score, Player1Score+1}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, won}, {reply, Player2, lost}]}
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, won}, {reply, F, lost}]}
                     end;
-                MatchOutcome =:= lost ->
+                MatchOutcome == lost ->
+                    % io:write(NewRoundNo),
                     if
-                        NewRoundNo >= Rounds ->
+                        NewRoundNo == Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score+1}}, {reply, F, {game_over, Player2Score+1, Player1Score}}]}; 
                         true ->
+                            nl,
+                            % io:write('true condition'),
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, lost}, {reply, Player2, won}]}
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, round_lost}, {reply, F, round_won}]}
                     end;
-                MatchOutcome =:= tie ->
-                    {next_state, match, Data#{last_move := none, game_length := NewGameLength}}
+                MatchOutcome == tie ->
+                    {next_state, match, Data#{last_move := none, game_length := NewGameLength}, [{reply, Player1, tie}, {reply, F, tie}]}
             end
     end;
 waiting_for_player2({call, From}, {tell_state}, Data) ->
     {keep_state, Data,
      [{reply,From,Data}]}.
 
-waiting_for_player1({call,{From,_Ref}}, {move, Choice}, 
+waiting_for_player1({call,{From,_Ref}=F}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
      round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
     {P1_id,_Re} = Player1,
@@ -100,26 +101,26 @@ waiting_for_player1({call,{From,_Ref}}, {move, Choice},
             NewRoundNo = RoundNo+1,
             MatchOutcome = match_result(LastMove, Choice),
             if
-                MatchOutcome =:= lost ->
+                MatchOutcome == lost ->
                     if
-                        NewRoundNo >= Rounds ->
+                        NewRoundNo == Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score+1, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score+1}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, won}, {reply, Player2, lost}]}
                     end;
-                MatchOutcome =:= won ->
+                MatchOutcome == won ->
                     if
-                        NewRoundNo >= Rounds ->
+                        NewRoundNo == Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score+1}}, {reply, Player2, {game_over, Player2Score+1, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, lost}, {reply, Player2, won}]}
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, round_lost}, {reply, Player2, round_won}]}
                     end;
-                MatchOutcome =:= tie ->
-                    {next_state, match, Data#{last_move := none, game_length := NewGameLength}}
+                MatchOutcome == tie ->
+                    {next_state, match, Data#{last_move := none, game_length := NewGameLength}, [{reply, Player2, tie}, {reply, F, tie}]}
             end
     end.
 

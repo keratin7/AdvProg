@@ -12,8 +12,8 @@ start_link() ->
 
 init([]) ->
     Queue = maps:new(), % #{ Rounds-> {Name, Pl_pid}}
-    Ong = [1,2,3],  
-    Longest = 5,
+    Ong = [],  
+    Longest = 0,
     DrainFlag = false,
     {ok, #{lm=>Longest, q=>Queue, on=>Ong, df=>DrainFlag}}.
 
@@ -48,6 +48,8 @@ handle_cast({Pid, Msg, drain}, State) ->	% Drain
     Return = {noreply, UpdatedState},
     io:format("handle_cast: ~p~n", [Return]),
     Return.
+handle_cast({game_over, GL}, State) ->
+	maps.put(lm, GL, State).
 
 handle_info(_Info, State) ->
     Return = {noreply, State},
