@@ -5,22 +5,17 @@
 -export([terminate/3,code_change/4,init/1,callback_mode/0]).
 -export([match/3, waiting_for_player1_turn/3, waiting_for_player2_turn/3 ]).
 
-name() -> coordinator_statem. % The registered server name
-
 %% API.  This example uses a registered name name()
 %% and does not link to the caller.
 start(Game_Deatils) ->
-    gen_statem:start({local,name()}, ?MODULE, Game_Deatils, []).
-
-move(Choice) ->
-    gen_statem:call(name(), {move, Choice}).
-
+    gen_statem:start(?MODULE, Game_Deatils, []).
 
 %% Mandatory callback functions
 terminate(_Reason, _State, _Data) ->
     void.
 code_change(_Vsn, State, Data, _Extra) ->
     {ok,State,Data}.
+
 init(Game_Deatils) ->
     %% Set the initial state + data.
     State = match, 
@@ -30,39 +25,41 @@ init(Game_Deatils) ->
             rounds => lists:nth(3, Game_Deatils),
             game_length => 0,
             last_move => none,
-            round_no => 0
+            round_no => 0,
+            bro_ref => lists:nth(4, Game_Deatils)
             } ,
     {ok,State,Data}.
 callback_mode() -> state_functions.
 
 %%% state callback(s)
 
-match({call,From}, {move, Choice}, 
-    #{player1 := Player1, player2 := Player2} = Data) ->
+match({call,From}, {move, Choice}, Data) ->
+    Player1 = Data#{player1},
+    Player2 = Data#{player2},
     if
         From =:= Player1 ->
-            {next_state, waiting_for_player2_turn, Data#{last_move := Choice}};
+            {next_state, waiting_for_player2, Data#{last_move := Choice}};
         From =:= Player2 ->
-            {next_state, waiting_for_player1_turn, Data#{last_move := Choice}};
+            {next_state, waiting_for_player1, Data#{last_move := Choice}};
         true ->
             {keep_state,Data}
     end.
     
-
-waiting_for_player2_turn({call,From}, {move, Choice}, 
-    #{player2 := Player2, last_move := LastMove, game_length := GameLength,
-     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}} = Data) ->
+waiting_for_player2({call,From}, {move, Choice}, 
+    #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
+     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
     if
         From =:=  Player2 ->
             NewGameLength = GameLength+1,
             NewRoundNo = RoundNo+1,
-            MatchOutcome = game_result(LastMove, Choice),
+            MatchOutcome = match_result(LastMove, Choice),
             if
                 MatchOutcome =:= won ->
                     if
                         NewRoundNo >= Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}}; 
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo},
+                            [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}}
@@ -71,7 +68,7 @@ waiting_for_player2_turn({call,From}, {move, Choice},
                     if
                         NewRoundNo >= Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}}; 
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}}
@@ -81,20 +78,20 @@ waiting_for_player2_turn({call,From}, {move, Choice},
             end
     end.
 
-waiting_for_player1_turn({call,From}, {move, Choice}, 
-    #{player1 := Player1, last_move := LastMove, game_length := GameLength,
-     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}} = Data) ->
+waiting_for_player1({call,From}, {move, Choice}, 
+    #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
+     round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
     if
         From =:=  Player1 ->
             NewGameLength = GameLength+1,
             NewRoundNo = RoundNo+1,
-            MatchOutcome = game_result(LastMove, Choice),
+            MatchOutcome = match_result(LastMove, Choice),
             if
                 MatchOutcome =:= lost ->
                     if
                         NewRoundNo >= Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}}; 
+                            scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score+1, Player2Score}, round_no := NewRoundNo}}
@@ -103,7 +100,7 @@ waiting_for_player1_turn({call,From}, {move, Choice},
                     if
                         NewRoundNo >= Rounds ->
                             {next_state, game_over, Data#{last_move := none, game_length := NewGameLength,
-                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}}; 
+                            scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}, [{reply, Player1, {game_over, Player1Score, Player2Score}}, {reply, Player2, {game_over, Player2Score, Player1Score}}]}; 
                         true ->
                             {next_state, match, Data#{last_move := none, game_length := NewGameLength,
                             scores := {Player1Score, Player2Score+1}, round_no := NewRoundNo}}
@@ -113,26 +110,38 @@ waiting_for_player1_turn({call,From}, {move, Choice},
             end
     end.
 
+game_over(Event, _ , Data) ->
+    {keep_state_and_data}
 
-game_result(Player1Choice, Player2Choice) ->
+
+match_result(FirstPChoice, SecondPChoice) ->
     Result =
     if
-        Player1Choice =:=  Player2Choice ->
+        FirstPChoice =:=  SecondPChoice ->
             tie;
-        {Player1Choice, Player2Choice} =:= {rock, scissor} ->
+        {FirstPChoice, SecondPChoice} =:= {rock, scissor} ->
             won;
-        {Player1Choice, Player2Choice} =:= {rock, paper } ->
+        {FirstPChoice, SecondPChoice} =:= {rock, paper } ->
             lost;
-        {Player1Choice, Player2Choice} =:= {paper, rock} ->
+        {FirstPChoice, SecondPChoice} =:= {paper, rock} ->
             won;
-        {Player1Choice, Player2Choice} =:= {paper, scissor} ->
+        {FirstPChoice, SecondPChoice} =:= {paper, scissor} ->
             lost;
-        {Player1Choice, Player2Choice} =:= {scissor, rock} ->
+        {FirstPChoice, SecondPChoice} =:= {scissor, rock} ->
             lost;
-        {Player1Choice, Player2Choice} =:= {scissor, paper} ->
+        {FirstPChoice, SecondPChoice} =:= {scissor, paper} ->
             won;
         true ->
-            none
+            Res1 = lists:member(FirstPChoice, [rock, paper, scissor]),
+            Res2 = lists:member(SecondPChoice, [rock, paper, scissor]),
+            if
+                Res1 =:= true ->
+                    won;
+                Res2 =:= true ->
+                    lost;
+                true -> 
+                    tie
+            end
     end,
     Result.
 

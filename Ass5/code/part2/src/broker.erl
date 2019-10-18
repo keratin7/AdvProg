@@ -17,15 +17,23 @@ init([]) ->
     {ok, #{lm=>Longest, q=>Queue, on=>Ong, df=>DrainFlag}}.
 
 handle_call({Name, Rounds}, P_id, State) ->		% queue_up
+	DF = maps:get(df, State)
+	if(DF =:= true) ->		% Drain
+
+		On = maps:get(on, State),
+		lists:foreach(fun({Id, Ref}) -> Id ! {purge_mothafuckas} end, On),
+		% Wait for all co-ordinators to die.
+
+	true ->
 		Que = maps:get(q, State),
 		Found = maps:is_key(Rounds,Que),
 		if
 		 Found == true ->	%If other player is found
 			{Nm, P1_id} = maps:get(Rounds, Que),	%Get player name, id
 			Que_rm = maps:remove(Rounds, Que),
-			Cord = woopie,				% Remove player from Que
-			% Cord = gen_statem:start_link(______),
-			% Cord ! {P_id, P1_id, Rounds}
+			% Cord = woopie,				% Remove player from Que
+			Cord = gen_statem:start_link([,,,]),
+			Cord ! {P_id, P1_id, Rounds}
 			gen_server:reply(P1_id, {ok, Name, Cord}),
 			Ong = maps:get(on, State),
 			NOng = lists:append(Ong, [Cord]),
@@ -35,7 +43,8 @@ handle_call({Name, Rounds}, P_id, State) ->		% queue_up
 		true ->
 			Que_wp = maps:put(Rounds, {Name, P_id}, Que),
 			{noreply, maps:put(q, Que_wp, State), infinity}
-		end;
+		end
+	end;
 handle_call(tell, _F, State) ->		% temporary tell
 	{reply, {ok, State}, State};
 handle_call(stats, _From, State)->	% statistics

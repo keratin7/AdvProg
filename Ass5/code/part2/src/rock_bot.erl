@@ -1,6 +1,6 @@
 -module(rock_bot).
 
--export([queue_up_and_play/1]).
+-export([queue_up_and_play/1, move_to_game_over/1]).
 
 queue_up_and_play(Broker) ->
     {ok, _Other, Coor} = rps:queue_up(Broker, "Rock bot(tom)", 3),
