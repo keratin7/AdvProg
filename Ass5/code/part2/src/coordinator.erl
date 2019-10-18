@@ -8,7 +8,7 @@
 %% API.  This example uses a registered name name()
 %% and does not link to the caller.
 start(Game_Deatils) ->
-    gen_statem:start_link(?MODULE, Game_Deatils, []).
+    gen_statem:start(?MODULE, Game_Deatils, []).
 
 %% Mandatory callback functions
 terminate(_Reason, _State, _Data) ->
@@ -134,21 +134,21 @@ match_result(FirstPChoice, SecondPChoice) ->
     if
         FirstPChoice =:=  SecondPChoice ->
             tie;
-        {FirstPChoice, SecondPChoice} =:= {rock, scissor} ->
+        {FirstPChoice, SecondPChoice} =:= {rock, scissors} ->
             won;
         {FirstPChoice, SecondPChoice} =:= {rock, paper } ->
             lost;
         {FirstPChoice, SecondPChoice} =:= {paper, rock} ->
             won;
-        {FirstPChoice, SecondPChoice} =:= {paper, scissor} ->
+        {FirstPChoice, SecondPChoice} =:= {paper, scissors} ->
             lost;
-        {FirstPChoice, SecondPChoice} =:= {scissor, rock} ->
+        {FirstPChoice, SecondPChoice} =:= {scissors, rock} ->
             lost;
-        {FirstPChoice, SecondPChoice} =:= {scissor, paper} ->
+        {FirstPChoice, SecondPChoice} =:= {scissors, paper} ->
             won;
         true ->
-            Res1 = lists:member(FirstPChoice, [rock, paper, scissor]),
-            Res2 = lists:member(SecondPChoice, [rock, paper, scissor]),
+            Res1 = lists:member(FirstPChoice, [rock, paper, scissors]),
+            Res2 = lists:member(SecondPChoice, [rock, paper, scissors]),
             if
                 Res1 =:= true ->
                     won;
