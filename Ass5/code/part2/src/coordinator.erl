@@ -42,7 +42,7 @@ match({call,{From,_R}=F}, {move, Choice}, #{player1 := Player1, player2 := Playe
         true ->
             {keep_state,Data}
     end;
-match({call, From}, {tell_state}, Data) ->
+match({cast, From}, {drain}, Data) ->
     {keep_state, Data,
      [{reply,From,Data}]}.
     
@@ -83,9 +83,8 @@ waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice},
                     {next_state, match, Data#{last_move := none, game_length := NewGameLength}, [{reply, Player1, tie}, {reply, F, tie}]}
             end
     end;
-waiting_for_player2({call, From}, {tell_state}, Data) ->
-    {keep_state, Data,
-     [{reply,From,Data}]}.
+waiting_for_player2({cast, _From}, {purge}, Data) ->
+    {next_state, draining, Data}.
 
 waiting_for_player1({call,{From,_Ref}=F}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
@@ -121,11 +120,18 @@ waiting_for_player1({call,{From,_Ref}=F}, {move, Choice},
                 MatchOutcome == tie ->
                     {next_state, match, Data#{last_move := none, game_length := NewGameLength}, [{reply, Player2, tie}, {reply, F, tie}]}
             end
-    end.
+    end;
+    waiting_for_player1({cast, From}, {purge}, Data) ->
+    {next_state, draining, Data}.
 
 game_over(_, _ , Data) ->
     {keep_state, Data}.
 
+draining({call, From}, {move, Choice}, Data) ->
+    {next_state, half_drained, Data, [{reply, From, server_stopping}]}.
+
+half_drained({call, From}, {move, Choice}, #{bro_ref := Bro_ref}=Data) ->
+    {next_state, game_over, Data, [{reply, From, server_stopping}, {reply, Bro_ref, {self(), purged}}]}.
 
 match_result(FirstPChoice, SecondPChoice) ->
     Result =

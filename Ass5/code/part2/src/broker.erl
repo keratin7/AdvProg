@@ -13,9 +13,14 @@ init([]) ->
     Ong = [],  
     Longest = 0,
     DrainFlag = false,
-    {ok, #{lm=>Longest, q=>Queue, on=>Ong, df=>DrainFlag}}.
+    Drain_pid = {},
+    {ok, #{lm=>Longest, q=>Queue, on=>Ong, df=>DrainFlag, dpid=>Drain_pid}}.
 
 handle_call({Name, Rounds}, P_id, State) ->		% queue_up
+	DF = maps:get(df, State),
+	if(DF =:= true) ->		% Drain
+		{reply, server_stopping, State};
+	true->
 		Que = maps:get(q, State),
 		Found = maps:is_key(Rounds,Que),
 		if
@@ -32,9 +37,8 @@ handle_call({Name, Rounds}, P_id, State) ->		% queue_up
 		true ->
 			Que_wp = maps:put(Rounds, {Name, P_id}, Que),
 			{noreply, maps:put(q, Que_wp, State), infinity}
-		end;
-handle_call(tell, _F, State) ->		% temporary tell
-	{reply, {ok, State}, State};
+		end
+	end;
 handle_call(stats, _From, State)->	% statistics
 	L = maps:get(lm, State),
 	O = maps:get(on, State),
@@ -43,17 +47,26 @@ handle_call(stats, _From, State)->	% statistics
 
 handle_cast({Pid, Msg, drain}, State) ->	% Drain 
 	UpdatedState = maps:put(df, true, State),
-    Return = {noreply, UpdatedState},
+	On = maps:get(on, State),
+	lists:foreach(fun(X) -> gen_statem:cast(X, {purge}) end, On),	% Tell all coordinators to purge
+    Return = {noreply, UpdatedState#{dpid := {Pid, Msg}}},
     io:format("handle_cast: ~p~n", [Return]),
     Return;
-handle_cast({C_id, game_over, GL}, State) ->
+handle_cast({C_id, game_over, GL}, State) ->	% Game over scenario
 	PrevBest = maps:get(lm, State),
 	L = maps:get(on, State),
 	if(GL > PrevBest) ->
 		{noreply, State#{lm := GL, on := lists:delete(C_id, L)}};
 	true ->
 		{noreply, State#{on := lists:delete(C_id, L)}}
-	end.
+	end;
+handle_cast({C_id, purged}, #{on := On, dpid := {P_id, Msg}}=State) ->
+	L = lists:flatlength(On),
+	if 
+		L==1 ->
+			gen_server:reply(P_id, Msg)
+	end,
+	{noreply, State#{on := lists:delete(C_id, On)}}.
 
 handle_info(_Info, State) ->
     Return = {noreply, State},
