@@ -3,7 +3,7 @@
 
 -export([start/1]).
 -export([terminate/3,code_change/4,init/1,callback_mode/0]).
--export([match/3, waiting_for_player1/3, waiting_for_player2/3, game_over/3 ]).
+-export([match/3, waiting_for_player1/3, waiting_for_player2/3, game_over/3, drained/3 ]).
 
 start(Game_Deatils) ->
     gen_statem:start(?MODULE, Game_Deatils, []).
@@ -42,9 +42,11 @@ match({call,{From,_R}=F}, {move, Choice}, #{player1 := Player1, player2 := Playe
         true ->
             {keep_state,Data}
     end;
-match({cast, From}, {drain}, Data) ->
-    {keep_state, Data,
-     [{reply,From,Data}]}.
+
+match(cast, {purge}, #{bro_ref := Bro_ref}=Data) ->
+    gen_server:cast(Bro_ref, {self(),purged}),                         
+    {next_state, drained, Data}.
+
     
 waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
@@ -83,14 +85,14 @@ waiting_for_player2( {call,{From, _Ref}=F}, {move, Choice},
                     {next_state, match, Data#{last_move := none, game_length := NewGameLength}, [{reply, Player1, tie}, {reply, F, tie}]}
             end
     end;
-waiting_for_player2({cast, _From}, {purge}, Data) ->
-    {next_state, draining, Data}.
+waiting_for_player2(cast, {purge}, #{bro_ref := Bro_ref, player1 := Player1}=Data) ->
+     gen_server:cast(Bro_ref, {self(),purged}),
+    {next_state, drained, Data, [{reply, Player1, server_stopping}]}.
 
 waiting_for_player1({call,{From,_Ref}=F}, {move, Choice}, 
     #{player1 := Player1, player2 := Player2, last_move := LastMove, game_length := GameLength,
      round_no := RoundNo, rounds := Rounds, scores := {Player1Score, Player2Score}, bro_ref := Bro_ref} = Data) ->
     {P1_id,_Re} = Player1,
-    % {P2_id,_Ref} = Player2,
     if
         From =:=  P1_id ->
             NewGameLength = GameLength+1,
@@ -121,17 +123,15 @@ waiting_for_player1({call,{From,_Ref}=F}, {move, Choice},
                     {next_state, match, Data#{last_move := none, game_length := NewGameLength}, [{reply, Player2, tie}, {reply, F, tie}]}
             end
     end;
-    waiting_for_player1({cast, From}, {purge}, Data) ->
-    {next_state, draining, Data}.
+waiting_for_player1(cast, {purge}, #{bro_ref := Bro_ref, player2 := Player2}=Data) ->
+     gen_server:cast(Bro_ref, {self(),purged}),
+    {next_state, drained, Data, [{reply, Player2, server_stopping}]}.
+
+drained({call, From}, _, Data) ->
+    {keep_state, Data, [{reply, From, server_stopping}]}.
 
 game_over(_, _ , Data) ->
     {keep_state, Data}.
-
-draining({call, From}, {move, Choice}, Data) ->
-    {next_state, half_drained, Data, [{reply, From, server_stopping}]}.
-
-half_drained({call, From}, {move, Choice}, #{bro_ref := Bro_ref}=Data) ->
-    {next_state, game_over, Data, [{reply, From, server_stopping}, {reply, Bro_ref, {self(), purged}}]}.
 
 match_result(FirstPChoice, SecondPChoice) ->
     Result =
@@ -163,11 +163,3 @@ match_result(FirstPChoice, SecondPChoice) ->
             end
     end,
     Result.
-
-%% Handle events common to all states
-handle_event({call,From}, get_count, Data) ->
-    %% Reply with the current count
-    {keep_state,Data,[{reply,From,Data}]};
-handle_event(_, _, Data) ->
-    %% Ignore all other events
-    {keep_state,Data}.

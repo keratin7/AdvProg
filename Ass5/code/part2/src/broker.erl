@@ -47,9 +47,11 @@ handle_call(stats, _From, State)->	% statistics
 
 handle_cast({Pid, Msg, drain}, State) ->	% Drain 
 	UpdatedState = maps:put(df, true, State),
+	Que = maps:get(q, State),
+	lists:foreach(fun({_,X}) -> gen_server:reply(X, server_stopping) end, maps:values(Que)),
 	On = maps:get(on, State),
 	lists:foreach(fun(X) -> gen_statem:cast(X, {purge}) end, On),	% Tell all coordinators to purge
-    Return = {noreply, UpdatedState#{dpid := {Pid, Msg}}},
+    Return = {noreply, UpdatedState#{dpid := {Pid, Msg}, q := #{}}},
     io:format("handle_cast: ~p~n", [Return]),
     Return;
 handle_cast({C_id, game_over, GL}, State) ->	% Game over scenario
@@ -64,7 +66,7 @@ handle_cast({C_id, purged}, #{on := On, dpid := {P_id, Msg}}=State) ->
 	L = lists:flatlength(On),
 	if 
 		L==1 ->
-			gen_server:reply(P_id, Msg)
+			P_id ! Msg
 	end,
 	{noreply, State#{on := lists:delete(C_id, On)}}.
 
