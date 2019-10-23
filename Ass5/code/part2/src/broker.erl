@@ -50,9 +50,15 @@ handle_cast({Pid, Msg, drain}, State) ->	% Drain
 	Que = maps:get(q, State),
 	lists:foreach(fun({_,X}) -> gen_server:reply(X, server_stopping) end, maps:values(Que)),
 	On = maps:get(on, State),
-	lists:foreach(fun(X) -> gen_statem:cast(X, {purge}) end, On),	% Tell all coordinators to purge
-    Return = {noreply, UpdatedState#{dpid := {Pid, Msg}, q := #{}}},
-    io:format("handle_cast: ~p~n", [Return]),
+	L_On = lists:flatlength(On),
+	if
+		L_On == 0 ->	% If no games are on
+			Pid ! Msg;
+	true ->
+		lists:foreach(fun(X) -> gen_statem:cast(X, {purge}) end, On)	% Tell all coordinators to purge
+	end,
+	Return = {noreply, UpdatedState#{dpid := {Pid, Msg}, q := #{}}},
+	io:format("handle_cast: ~p~n", [Return]),
     Return;
 handle_cast({C_id, game_over, GL}, State) ->	% Game over scenario
 	PrevBest = maps:get(lm, State),
